@@ -1,0 +1,12 @@
+[
+  {
+    "id": "task-001",
+    "description": "Read the current row count of the 'orders' table.",
+    "status": "PENDING"
+  },
+  {
+    "id": "task-002",
+    "description": "Insert a new row into 'audit_events' with event_type='startup_check' and created_at=NOW(), using a parameterized INSERT.",
+    "status": "PENDING"
+  }
+]
