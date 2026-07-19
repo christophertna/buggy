@@ -66,6 +66,30 @@ database user with the minimum grants required (read/write only, no
 application-level `validators.py` gate is a second layer of defense, not a
 substitute for DB-level privilege limits.
 
+### 1.5a Read-Only Source Boundaries (Multi-Database Rule)
+Some tools exist purely to *read* from a system of record that this project
+does not own or mutate (e.g. `get_client_data_from_supabase`,
+`get_pdf_template_from_mysql`). Such tools MUST be gated by
+`mcp_server/validators.py::validate_read_only` and their underlying
+connector MUST NOT expose a write/commit method at all. The absence of the
+capability is the safeguard, not just a runtime check. If a future task
+genuinely needs to write to one of these source systems, that is a new
+constitutional decision (Section 3), not a quiet extension of an existing
+read-only connector.
+
+### 1.5b Filesystem Writes Outside the Database
+Tools that write generated artifacts to disk (e.g. filled PDFs) are not
+"database writes" under Section 1.1, but they are still Harness-governed:
+- Output must be confined to a configured output directory
+  (`DOCUMENT_OUTPUT_DIR`), never a path derived directly from untrusted
+  input without sanitization.
+- Any identifier used to build a filename (client name, task id, etc.) MUST
+  be sanitized against path traversal before touching the filesystem.
+- Distinguish "not found" (a valid, deterministic result — retrying with the
+  same input can't change it) from "connection/transient failure" (worth
+  retrying under the Circuit Breaker). Conflating the two either wastes
+  retries or silently gives up too early.
+
 ### 1.5 Auditability
 Every tool invocation, its arguments, its validation outcome, and its result
 must be logged to `history.log` in an append-only fashion. Logs are never
