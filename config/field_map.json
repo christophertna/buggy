@@ -1,0 +1,9 @@
+{
+  "_comment": "Maps Supabase 'clients' columns (left) to PDF AcroForm field names (right). Adjust to match your actual template's field names, inspect them with pypdf's reader.get_fields() if unsure.",
+  "full_name": "FullName",
+  "address_line1": "Address",
+  "city": "City",
+  "state": "State",
+  "zip_code": "ZipCode",
+  "date_of_birth": "DateOfBirth"
+}
