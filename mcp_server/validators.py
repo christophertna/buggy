@@ -72,6 +72,20 @@ def _extract_table(sql: str) -> str | None:
     match = _TABLE_AFTER_VERB.search(sql)
     return match.group(1).lower() if match else None
 
+def validate_read_only(sql: str) -> ValidationResult:
+    """
+    Harness gate for tools that must NEVER mutate data, regardless of what
+    they're called with, mainly used by the Supabase client-data tool and the
+    MySQL PDF-template tool (CONSTITUTION.md 1.6). Unlike validate_write,
+    this doesn't check parameterization/scoping; it simply refuses anything
+    that isnt a read.
+    """
+    if is_write_statement(sql):
+        return ValidationResult(
+            ValidationOutcome.BLOCKED_UNPARAMETERIZED,  # reuse: "blocked, unsafe"
+            "This tool is read-only and rejects any mutating statement.",
+        )
+    return ValidationResult(ValidationOutcome.ALLOWED, "Read-only statement permitted.")
 
 def validate_write(
     sql: str,
