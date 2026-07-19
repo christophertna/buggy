@@ -47,6 +47,29 @@ class HarnessSettings:
 
 
 @dataclass(frozen=True)
+class SupabaseSettings:
+    """Read-only source of client profile data (Postgres via Supabase)."""
+    host: str = os.environ.get("SUPABASE_DB_HOST", "")
+    port: int = _env_int("SUPABASE_DB_PORT", 5432)
+    user: str = os.environ.get("SUPABASE_DB_USER", "postgres")
+    password: str = os.environ.get("SUPABASE_DB_PASSWORD", "")
+    database: str = os.environ.get("SUPABASE_DB_NAME", "postgres")
+    sslmode: str = os.environ.get("SUPABASE_SSLMODE", "require")
+    connect_timeout: int = _env_int("SUPABASE_CONNECT_TIMEOUT", 5)
+
+
+@dataclass(frozen=True)
+class DocumentAutomationSettings:
+    """Config for the deterministic Document Automation pipeline."""
+    # Client attribute (Supabase column) used to select the correct PDF
+    # template from MySQL, e.g. "state" for US-state-specific forms.
+    template_attribute: str = os.environ.get("DOC_TEMPLATE_ATTRIBUTE", "state")
+    clients_input_file: str = os.environ.get("CLIENTS_INPUT_FILE", "clients.txt")
+    output_dir: str = os.environ.get("DOCUMENT_OUTPUT_DIR", "output/documents")
+    field_map_path: str = os.environ.get("FIELD_MAP_PATH", "config/field_map.json")
+
+
+@dataclass(frozen=True)
 class LLMSettings:
     api_key: str = os.environ.get("OPENAI_API_KEY", "")
     model: str = os.environ.get("OPENAI_MODEL", "gpt-4.1")
@@ -60,6 +83,8 @@ class PathSettings:
 
 
 DB = DBSettings()
+SUPABASE = SupabaseSettings()
 HARNESS = HarnessSettings()
+DOC_AUTOMATION = DocumentAutomationSettings()
 LLM = LLMSettings()
 PATHS = PathSettings()
