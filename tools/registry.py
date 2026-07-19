@@ -7,7 +7,7 @@ agent_orchestrator/orchestrator.py forwards the LLM's chosen tool_name
 straight through to session.call_tool().
 
 Keeping this declaration separate from mcp_server/server.py is deliberate:
-the orchestrator/LLM side should only see what it's allowed to see, and this
+the orchestrator/LLM side should only see what its allowed to see, and this
 file is the place to trim or rephrase descriptions for prompting purposes
 without touching the actual server implementation.
 """
@@ -58,6 +58,42 @@ TOOL_SCHEMAS = [
                     },
                 },
                 "required": ["sql"],
+            },
+        },
+    },
+    # Document Automation tools
+    # NOTE: the document_automation workflow calls these directly as plain
+    # Python functions (tools/get_client_data.py, tools/get_pdf_template.py)
+    # rather than through this LLM tool-calling path, per the deterministic
+    # pipeline design. These schemas exist so the same tools can be reused
+    # by an LLM-driven task later without redefining them.
+    {
+        "type": "function",
+        "function": {
+            "name": "get_client_data_from_supabase",
+            "description": "Read-only lookup of a client's profile from Supabase (Postgres) by full name.",
+            "parameters": {
+                "type": "object",
+                "properties": {"client_name": {"type": "string"}},
+                "required": ["client_name"],
+            },
+        },
+    },
+    {
+        "type": "function",
+        "function": {
+            "name": "get_pdf_template_from_mysql",
+            "description": (
+                "Read-only lookup of a PDF template from the local MySQL asset DB, "
+                "selected by a deterministic attribute (e.g. attribute_key='state')."
+            ),
+            "parameters": {
+                "type": "object",
+                "properties": {
+                    "attribute_key": {"type": "string"},
+                    "attribute_value": {"type": "string"},
+                },
+                "required": ["attribute_key", "attribute_value"],
             },
         },
     },
