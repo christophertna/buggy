@@ -21,6 +21,8 @@ from mcp.types import TextContent, Tool
 
 from mcp_server.db_connector import db
 from mcp_server.validators import validate_write
+from tools.get_client_data import get_client_data_from_supabase
+from tools.get_pdf_template import get_pdf_template_from_mysql
 
 server = Server("local-mysql-harness")
 
@@ -65,6 +67,30 @@ async def list_tools() -> list[Tool]:
                 "required": ["sql"],
             },
         ),
+        Tool(
+            name="get_client_data_from_supabase",
+            description="Read-only lookup of a client's profile from Supabase (Postgres) by full name.",
+            inputSchema={
+                "type": "object",
+                "properties": {"client_name": {"type": "string"}},
+                "required": ["client_name"],
+            },
+        ),
+        Tool(
+            name="get_pdf_template_from_mysql",
+            description=(
+                "Read-only lookup of a PDF template from the local MySQL asset DB, "
+                "selected by a deterministic attribute (e.g. attribute_key='state')."
+            ),
+            inputSchema={
+                "type": "object",
+                "properties": {
+                    "attribute_key": {"type": "string"},
+                    "attribute_value": {"type": "string"},
+                },
+                "required": ["attribute_key", "attribute_value"],
+            },
+        ),
     ]
 
 
@@ -74,6 +100,21 @@ async def call_tool(name: str, arguments: dict) -> list[TextContent]:
         return await _handle_sql_read(arguments)
     if name == "sql_write":
         return await _handle_sql_write(arguments)
+    if name == "get_client_data_from_supabase":
+        result = get_client_data_from_supabase(arguments["client_name"])
+        return [TextContent(type="text", text=json.dumps(result, default=str))]
+    if name == "get_pdf_template_from_mysql":
+        result = get_pdf_template_from_mysql(
+            arguments["attribute_key"], arguments["attribute_value"]
+        )
+        # template_blob is bytes — not JSON-serializable as-is; base64 it
+        # for the MCP text-content contract. Callers using the direct
+        # tools/get_pdf_template.py import get raw bytes instead (preferred
+        # for this project's deterministic workflow).
+        if result.get("status") == "SUCCESS" and isinstance(result.get("template_blob"), bytes):
+            import base64
+            result = {**result, "template_blob_b64": base64.b64encode(result.pop("template_blob")).decode()}
+        return [TextContent(type="text", text=json.dumps(result, default=str))]
     return [TextContent(type="text", text=json.dumps({
         "status": "FAILURE",
         "error": f"Unknown tool '{name}'",
