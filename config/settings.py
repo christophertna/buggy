@@ -67,6 +67,9 @@ class DocumentAutomationSettings:
     clients_input_file: str = os.environ.get("CLIENTS_INPUT_FILE", "clients.txt")
     output_dir: str = os.environ.get("DOCUMENT_OUTPUT_DIR", "output/documents")
     field_map_path: str = os.environ.get("FIELD_MAP_PATH", "config/field_map.json")
+    # Base directory template_path values are resolved against. Rows can
+    # never point outside this directory (see tools/get_pdf_template.py).
+    template_root: str = os.environ.get("PDF_TEMPLATE_ROOT", "templates/pdf")
 
 
 @dataclass(frozen=True)
