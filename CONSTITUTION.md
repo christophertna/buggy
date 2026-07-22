@@ -77,11 +77,13 @@ and that's fine as long as each is genuinely load-bearing:
 - `get_client_data_from_supabase` talks to Supabase's REST API (PostgREST)
   via the publishable/anon key, using a query builder rather than SQL
   strings. There is no SQL-string validator to apply here — the actual
-  boundary is the Row Level Security policy on the `clients` table in
+  boundary is the Row Level Security policy on the `applicants` table in
   Supabase itself, which must grant SELECT-only to the anon role. That RLS
   policy IS the Harness boundary for this tool; a missing or overly
   permissive policy is a Harness violation even though no application code
-  changed.
+  changed. `applicants` holds sensitive personal data (birth date, contact
+  info, addresses) even with passport fields excluded from the query — this
+  is not a table to relax RLS on "just for testing."
 If a future task genuinely needs to write to one of these source systems,
 that is a new constitutional decision (Section 3), not a quiet extension of
 an existing read-only tool or a quiet loosening of an RLS policy.
