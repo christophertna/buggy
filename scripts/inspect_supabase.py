@@ -1,12 +1,12 @@
 """
 scripts/inspect_supabase.py
 
-Diagnostic tool, NOT part of the runtime agent loop. Queries the 'clients'
-table through the exact same client/key the agent uses at runtime, and
-reports what actually comes back. This is the most honest way to check
-whether reality matches what tools/get_client_data.py expects, since it
-shows you the agent's-eye view (through RLS), not the dashboard's
-authenticated, policy-bypassing view.
+Diagnostic tool, NOT part of the runtime agent loop. Queries the
+'applicants' table through the exact same client/key the agent uses at
+runtime, and reports what actually comes back. This is the most honest
+way to check whether reality matches what tools/get_client_data.py
+expects, since it shows you the agent's-eye view (through RLS), not the
+dashboard's authenticated, policy-bypassing view.
 
 Usage (from project root, venv active):
     python -m scripts.inspect_supabase
@@ -14,8 +14,12 @@ Usage (from project root, venv active):
 from config.settings import DOC_AUTOMATION, SUPABASE
 from mcp_server.supabase_connector import supabase_db
 
-CLIENT_TABLE = "clients"
-EXPECTED_COLUMNS = {"full_name", "address_line1", "city", "state", "zip_code", "date_of_birth"}
+CLIENT_TABLE = "applicants"
+EXPECTED_COLUMNS = {
+    "user_id", "full_name", "first_name", "last_name", "birth_date",
+    "address", "mailing_address", "city", "state", "country",
+    "phone_number", "email", "minor", "main_contact",
+}
 
 
 def main():
@@ -39,7 +43,7 @@ def main():
     except Exception as exc:
         print(f"Query failed: {exc}")
         print(
-            "Likely causes: table name is wrong (is it really called 'clients'?), "
+            "Likely causes: table name is wrong (is it really called 'applicants'?), "
             "or the table/schema doesn't exist yet."
         )
         return
@@ -51,7 +55,7 @@ def main():
         print(
             "This means EITHER the table is empty, OR Row Level Security is silently "
             "filtering everything out for the anon/publishable role. Both look identical "
-            "from here — check Supabase Dashboard -> Table Editor -> clients to see if "
+            "from here — check Supabase Dashboard -> Table Editor -> applicants to see if "
             "rows actually exist, and Authentication -> Policies to confirm an anon "
             "SELECT policy is attached."
         )
