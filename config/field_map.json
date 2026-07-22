@@ -1,9 +1,14 @@
 {
-  "_comment": "Maps Supabase 'clients' columns (left) to PDF AcroForm field names (right). Adjust to match your actual template's field names, inspect them with pypdf's reader.get_fields() if unsure.",
+  "_comment": "Maps Supabase 'applicants' columns (left) to PDF AcroForm field names (right). Adjust right-hand values to match your actual template - inspect real field names with pypdf's reader.get_fields(). Boolean columns (minor, main_contact) currently render as Python's str(True)/str(False) via tools/pdf_filler.py - revisit if your form expects Yes/No or a checkbox value instead.",
   "full_name": "FullName",
-  "address_line1": "Address",
+  "first_name": "FirstName",
+  "last_name": "LastName",
+  "birth_date": "DateOfBirth",
+  "address": "Address",
+  "mailing_address": "MailingAddress",
   "city": "City",
   "state": "State",
-  "zip_code": "ZipCode",
-  "date_of_birth": "DateOfBirth"
+  "country": "Country",
+  "phone_number": "PhoneNumber",
+  "email": "Email"
 }
