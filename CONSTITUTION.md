@@ -69,13 +69,22 @@ substitute for DB-level privilege limits.
 ### 1.5a Read-Only Source Boundaries (Multi-Database Rule)
 Some tools exist purely to *read* from a system of record that this project
 does not own or mutate (e.g. `get_client_data_from_supabase`,
-`get_pdf_template_from_mysql`). Such tools MUST be gated by
-`mcp_server/validators.py::validate_read_only` and their underlying
-connector MUST NOT expose a write/commit method at all. The absence of the
-capability is the safeguard, not just a runtime check. If a future task
-genuinely needs to write to one of these source systems, that is a new
-constitutional decision (Section 3), not a quiet extension of an existing
-read-only connector.
+`get_pdf_template_from_mysql`). The enforcement mechanism differs by source,
+and that's fine as long as each is genuinely load-bearing:
+- `get_pdf_template_from_mysql` talks raw SQL to a direct connection, so it
+  is gated in application code by `mcp_server/validators.py::validate_read_only`,
+  and its connector exposes no write/commit method.
+- `get_client_data_from_supabase` talks to Supabase's REST API (PostgREST)
+  via the publishable/anon key, using a query builder rather than SQL
+  strings. There is no SQL-string validator to apply here — the actual
+  boundary is the Row Level Security policy on the `clients` table in
+  Supabase itself, which must grant SELECT-only to the anon role. That RLS
+  policy IS the Harness boundary for this tool; a missing or overly
+  permissive policy is a Harness violation even though no application code
+  changed.
+If a future task genuinely needs to write to one of these source systems,
+that is a new constitutional decision (Section 3), not a quiet extension of
+an existing read-only tool or a quiet loosening of an RLS policy.
 
 ### 1.5b Filesystem Writes Outside the Database
 Tools that write generated artifacts to disk (e.g. filled PDFs) are not
