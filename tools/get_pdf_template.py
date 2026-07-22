@@ -3,22 +3,22 @@ tools/get_pdf_template.py
 
 Tool: get_pdf_template_from_mysql
 Read-only lookup of a PDF template. The MySQL row only stores a relative
-PATH to the template file (not the binary) — the row is resolved against
+PATH to the template file (not the binary), the row is resolved against
 PDF_TEMPLATE_ROOT and the file is read from disk. A missing DB row and a
 missing file on disk both collapse to NOT_FOUND: either way, there's
 nothing to fill, and retrying an identical lookup can't change that.
 
 Path-traversal guard: template_path is untrusted input the moment it comes
-out of the database (someone could seed a malicious row). We resolve it
-against template_root and reject anything that escapes that directory,
-mirroring the filesystem-write safety already applied to output paths
-(CONSTITUTION.md 1.5b) — this is the read-side equivalent.
+out of the database. We resolve it against template_root and reject
+anything that escapes that directory (CONSTITUTION.md 1.5b), this is the
+read-side equivalent of the sanitization applied to output filenames in
+workflows/document_automation.py.
 """
 from pathlib import Path
 
+from config.settings import DOC_AUTOMATION
 from mcp_server.db_connector import db
 from mcp_server.validators import validate_read_only
-from config.settings import DOC_AUTOMATION
 
 TEMPLATE_QUERY = """
     SELECT id, template_name, template_path
@@ -57,8 +57,6 @@ def get_pdf_template_from_mysql(attribute_key: str, attribute_value: str) -> dic
     resolved_path = _resolve_template_path(row["template_path"])
 
     if resolved_path is None:
-        # Data integrity / tampering concern, not a normal miss — worth its
-        # own message even though the terminal status is the same as NOT_FOUND.
         return {
             "status": "NOT_FOUND",
             "error": (
