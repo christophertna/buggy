@@ -7,7 +7,9 @@ keep the two in sync if you ever change them.
 """
 import os
 from dataclasses import dataclass, field
+from dotenv import load_dotenv
 
+load_dotenv()
 
 def _env_int(name: str, default: int) -> int:
     return int(os.environ.get(name, default))
