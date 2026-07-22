@@ -8,9 +8,6 @@ keep the two in sync if you ever change them.
 import os
 from dataclasses import dataclass, field
 
-from dotenv import load_dotenv
-load_dotenv()
-
 
 def _env_int(name: str, default: int) -> int:
     return int(os.environ.get(name, default))
@@ -51,14 +48,15 @@ class HarnessSettings:
 
 @dataclass(frozen=True)
 class SupabaseSettings:
-    """Read-only source of client profile data (Postgres via Supabase)."""
-    host: str = os.environ.get("SUPABASE_DB_HOST", "")
-    port: int = _env_int("SUPABASE_DB_PORT", 5432)
-    user: str = os.environ.get("SUPABASE_DB_USER", "postgres")
-    password: str = os.environ.get("SUPABASE_DB_PASSWORD", "")
-    database: str = os.environ.get("SUPABASE_DB_NAME", "postgres")
-    sslmode: str = os.environ.get("SUPABASE_SSLMODE", "require")
-    connect_timeout: int = _env_int("SUPABASE_CONNECT_TIMEOUT", 5)
+    """
+    Read-only source of client profile data, accessed via the Supabase
+    REST API (PostgREST) rather than a direct Postgres connection. Access
+    control lives in Supabase's Row Level Security policies on the
+    `clients` table, not in this app, the publishable key is meant to be
+    used exactly this way (CONSTITUTION.md 1.5a).
+    """
+    url: str = os.environ.get("SUPABASE_URL", "")
+    api_key: str = os.environ.get("SUPABASE_PUBLISHABLE_KEY", "")
 
 
 @dataclass(frozen=True)
@@ -70,8 +68,8 @@ class DocumentAutomationSettings:
     clients_input_file: str = os.environ.get("CLIENTS_INPUT_FILE", "clients.txt")
     output_dir: str = os.environ.get("DOCUMENT_OUTPUT_DIR", "output/documents")
     field_map_path: str = os.environ.get("FIELD_MAP_PATH", "config/field_map.json")
-    # Base directory template_path values are resolved against. Rows can
-    # never point outside this directory (see tools/get_pdf_template.py).
+    # Base directory template_path values (in MySQL) are resolved against.
+    # Rows can never point outside this directory — see tools/get_pdf_template.py.
     template_root: str = os.environ.get("PDF_TEMPLATE_ROOT", "templates/pdf")
 
 
